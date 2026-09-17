@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -39,9 +40,15 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 	}
 
+	ln, err := net.Listen("tcp", server.Addr)
+	if err != nil {
+		logger.Error("listen", "error", err, "port", port)
+		os.Exit(1)
+	}
+	logger.Info("server started", "port", port)
+
 	go func() {
-		logger.Info("server started", "port", port)
-		if serveErr := server.ListenAndServe(); serveErr != nil && !errors.Is(serveErr, http.ErrServerClosed) {
+		if serveErr := server.Serve(ln); serveErr != nil && !errors.Is(serveErr, http.ErrServerClosed) {
 			logger.Error("server failed", "error", serveErr)
 			os.Exit(1)
 		}
