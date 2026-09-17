@@ -154,11 +154,12 @@ func (s *Service) SetConnectorStatus(ctx context.Context, id string, status doma
 	return s.repo.SetConnectorStatus(ctx, id, status)
 }
 
-func (s *Service) DriverSessions(ctx context.Context, id string) ([]domain.Session, error) {
-	if id == "" {
-		return nil, fmt.Errorf("%w: driver id is required", domain.ErrInvalidInput)
+func (s *Service) DriverSessions(ctx context.Context, email string) ([]domain.Session, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
+	if email == "" {
+		return nil, fmt.Errorf("%w: driver email is required", domain.ErrInvalidInput)
 	}
-	return s.repo.ListDriverSessions(ctx, id)
+	return s.repo.ListDriverSessions(ctx, email)
 }
 
 func (s *Service) StationSessions(ctx context.Context, id string) ([]domain.Session, error) {
