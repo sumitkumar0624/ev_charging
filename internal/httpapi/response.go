@@ -7,24 +7,29 @@ import (
 	"net/http"
 
 	"github.com/example/evcharging/internal/domain"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-func decode(w http.ResponseWriter, r *http.Request, target any) bool {
+func (h *Handler) decode(w http.ResponseWriter, r *http.Request, target any) bool {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(target); err != nil {
+		h.logger.Error("invalid json", "error", err, "method", r.Method, "path", r.URL.Path,
+			"request_id", middleware.GetReqID(r.Context()))
 		writeError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return false
 	}
 	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		h.logger.Error("invalid json body", "error", err, "method", r.Method, "path", r.URL.Path,
+			"request_id", middleware.GetReqID(r.Context()))
 		writeError(w, http.StatusBadRequest, "request body must contain one JSON object")
 		return false
 	}
 	return true
 }
 
-func respond(w http.ResponseWriter, value any, err error, successStatus int) {
+func (h *Handler) respond(w http.ResponseWriter, r *http.Request, value any, err error, successStatus int) {
 	if err == nil {
 		writeJSON(w, successStatus, value)
 		return
@@ -43,11 +48,15 @@ func respond(w http.ResponseWriter, value any, err error, successStatus int) {
 	case errors.Is(err, domain.ErrInvalidPromo), errors.Is(err, domain.ErrUnsupportedConnector):
 		status = http.StatusUnprocessableEntity
 	}
-	message := err.Error()
 	if status == http.StatusInternalServerError {
-		message = "internal server error"
+		h.logger.Error("request failed", "error", err, "status", status, "method", r.Method,
+			"path", r.URL.Path, "request_id", middleware.GetReqID(r.Context()))
+		writeError(w, status, "internal server error")
+		return
 	}
-	writeError(w, status, message)
+	h.logger.Info("request rejected", "error", err, "status", status, "method", r.Method,
+		"path", r.URL.Path, "request_id", middleware.GetReqID(r.Context()))
+	writeError(w, status, err.Error())
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
