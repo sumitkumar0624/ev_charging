@@ -280,8 +280,10 @@ func (p *Postgres) SetConnectorStatus(ctx context.Context, id string, status dom
 	return connector, mapError(err)
 }
 
-func (p *Postgres) ListDriverSessions(ctx context.Context, id string) ([]domain.Session, error) {
-	return p.listSessions(ctx, `SELECT `+sessionColumns+` FROM charging_sessions WHERE driver_id=$1 ORDER BY started_at DESC`, id)
+func (p *Postgres) ListDriverSessions(ctx context.Context, email string) ([]domain.Session, error) {
+	return p.listSessions(ctx, `SELECT `+sessionColumns+` FROM charging_sessions
+		WHERE driver_id IN (SELECT id FROM drivers WHERE email=$1)
+		ORDER BY started_at DESC`, strings.ToLower(strings.TrimSpace(email)))
 }
 
 func (p *Postgres) ListStationSessions(ctx context.Context, id string) ([]domain.Session, error) {
@@ -314,7 +316,7 @@ func getSession(ctx context.Context, tx pgx.Tx, id string, lock bool) (domain.Se
 func (p *Postgres) listSessions(ctx context.Context, query, id string) ([]domain.Session, error) {
 	rows, err := p.pool.Query(ctx, query, id)
 	if err != nil {
-		return nil, err
+		return nil, mapError(err)
 	}
 	defer rows.Close()
 	sessions := make([]domain.Session, 0)
@@ -325,7 +327,7 @@ func (p *Postgres) listSessions(ctx context.Context, query, id string) ([]domain
 		}
 		sessions = append(sessions, session)
 	}
-	return sessions, rows.Err()
+	return sessions, mapError(rows.Err())
 }
 
 func mapError(err error) error {
@@ -336,8 +338,13 @@ func mapError(err error) error {
 		return domain.ErrNotFound
 	}
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return fmt.Errorf("%w: duplicate value", domain.ErrConflict)
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505":
+			return fmt.Errorf("%w: duplicate value", domain.ErrConflict)
+		case "22P02":
+			return fmt.Errorf("%w: identifier must be a UUID", domain.ErrInvalidInput)
+		}
 	}
 	return err
 }
