@@ -1,0 +1,157 @@
+{
+  "base_url": "http://localhost:8080",
+  "note": "If the API is running under debug, use http://localhost:8081. Replace DRIVER_ID, STATION_ID, AC_CONNECTOR_ID, and SESSION_ID from earlier responses.",
+  "apis": [
+    {
+      "name": "health",
+      "method": "GET",
+      "path": "/health",
+      "curl": "curl -sS http://localhost:8080/health"
+    },
+    {
+      "name": "register_driver",
+      "method": "POST",
+      "path": "/v1/drivers",
+      "body": {
+        "name": "Asha Rao",
+        "email": "asha@example.com",
+        "registration_number": "KA01EV1234",
+        "supported_connector_types": ["AC", "DC"]
+      },
+      "curl": "curl -sS -X POST http://localhost:8080/v1/drivers -H 'Content-Type: application/json' -d '{\"name\":\"Asha Rao\",\"email\":\"asha@example.com\",\"registration_number\":\"KA01EV1234\",\"supported_connector_types\":[\"AC\",\"DC\"]}'"
+    },
+    {
+      "name": "register_driver_second_vehicle",
+      "method": "POST",
+      "path": "/v1/drivers",
+      "body": {
+        "name": "Asha Rao",
+        "email": "asha@example.com",
+        "registration_number": "KA01EV9999",
+        "supported_connector_types": ["AC", "DC"]
+      },
+      "curl": "curl -sS -X POST http://localhost:8080/v1/drivers -H 'Content-Type: application/json' -d '{\"name\":\"Asha Rao\",\"email\":\"asha@example.com\",\"registration_number\":\"KA01EV9999\",\"supported_connector_types\":[\"AC\",\"DC\"]}'"
+    },
+    {
+      "name": "register_station",
+      "method": "POST",
+      "path": "/v1/stations",
+      "body": {
+        "name": "MG Road Charging Hub",
+        "latitude": 12.9756,
+        "longitude": 77.6066,
+        "connectors": [
+          {"type": "AC", "power_kw": 22},
+          {"type": "DC", "power_kw": 60}
+        ]
+      },
+      "curl": "curl -sS -X POST http://localhost:8080/v1/stations -H 'Content-Type: application/json' -d '{\"name\":\"MG Road Charging Hub\",\"latitude\":12.9756,\"longitude\":77.6066,\"connectors\":[{\"type\":\"AC\",\"power_kw\":22},{\"type\":\"DC\",\"power_kw\":60}]}'"
+    },
+    {
+      "name": "set_connector_out_of_service",
+      "method": "PATCH",
+      "path": "/v1/connectors/{connectorID}/status",
+      "body": {"status": "OUT_OF_SERVICE"},
+      "curl": "curl -sS -X PATCH http://localhost:8080/v1/connectors/AC_CONNECTOR_ID/status -H 'Content-Type: application/json' -d '{\"status\":\"OUT_OF_SERVICE\"}'"
+    },
+    {
+      "name": "set_connector_available",
+      "method": "PATCH",
+      "path": "/v1/connectors/{connectorID}/status",
+      "body": {"status": "AVAILABLE"},
+      "curl": "curl -sS -X PATCH http://localhost:8080/v1/connectors/AC_CONNECTOR_ID/status -H 'Content-Type: application/json' -d '{\"status\":\"AVAILABLE\"}'"
+    },
+    {
+      "name": "create_promo",
+      "method": "POST",
+      "path": "/v1/promo-codes",
+      "body": {
+        "code": "EV20",
+        "discount_percent": 20,
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
+        "max_uses": 100
+      },
+      "curl": "curl -sS -X POST http://localhost:8080/v1/promo-codes -H 'Content-Type: application/json' -d '{\"code\":\"EV20\",\"discount_percent\":20,\"valid_from\":\"2026-01-01T00:00:00Z\",\"valid_until\":\"2027-01-01T00:00:00Z\",\"max_uses\":100}'"
+    },
+    {
+      "name": "start_session",
+      "method": "POST",
+      "path": "/v1/sessions",
+      "body": {
+        "driver_id": "DRIVER_ID",
+        "requested_type": "AC",
+        "latitude": 12.9716,
+        "longitude": 77.5946,
+        "radius_km": 5,
+        "promo_code": "EV20"
+      },
+      "curl": "curl -sS -X POST http://localhost:8080/v1/sessions -H 'Content-Type: application/json' -d '{\"driver_id\":\"DRIVER_ID\",\"requested_type\":\"AC\",\"latitude\":12.9716,\"longitude\":77.5946,\"radius_km\":5,\"promo_code\":\"EV20\"}'"
+    },
+    {
+      "name": "start_session_no_promo",
+      "method": "POST",
+      "path": "/v1/sessions",
+      "body": {
+        "driver_id": "DRIVER_ID",
+        "requested_type": "AC",
+        "latitude": 12.9716,
+        "longitude": 77.5946,
+        "radius_km": 5
+      },
+      "curl": "curl -sS -X POST http://localhost:8080/v1/sessions -H 'Content-Type: application/json' -d '{\"driver_id\":\"DRIVER_ID\",\"requested_type\":\"AC\",\"latitude\":12.9716,\"longitude\":77.5946,\"radius_km\":5}'"
+    },
+    {
+      "name": "end_session",
+      "method": "POST",
+      "path": "/v1/sessions/{sessionID}/end",
+      "body": {"energy_delivered_kwh": 11},
+      "curl": "curl -sS -X POST http://localhost:8080/v1/sessions/SESSION_ID/end -H 'Content-Type: application/json' -d '{\"energy_delivered_kwh\":11}'"
+    },
+    {
+      "name": "driver_sessions",
+      "method": "GET",
+      "path": "/v1/drivers/{driverID}/sessions",
+      "curl": "curl -sS http://localhost:8080/v1/drivers/DRIVER_ID/sessions"
+    },
+    {
+      "name": "station_sessions",
+      "method": "GET",
+      "path": "/v1/stations/{stationID}/sessions",
+      "curl": "curl -sS http://localhost:8080/v1/stations/STATION_ID/sessions"
+    },
+    {
+      "name": "delete_promo",
+      "method": "DELETE",
+      "path": "/v1/promo-codes/{code}",
+      "curl": "curl -sS -X DELETE http://localhost:8080/v1/promo-codes/EV20"
+    },
+    {
+      "name": "start_session_no_station_in_radius",
+      "method": "POST",
+      "path": "/v1/sessions",
+      "body": {
+        "driver_id": "DRIVER_ID",
+        "requested_type": "AC",
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "radius_km": 1
+      },
+      "curl": "curl -sS -i -X POST http://localhost:8080/v1/sessions -H 'Content-Type: application/json' -d '{\"driver_id\":\"DRIVER_ID\",\"requested_type\":\"AC\",\"latitude\":28.6139,\"longitude\":77.209,\"radius_km\":1}'"
+    },
+    {
+      "name": "start_session_invalid_promo",
+      "method": "POST",
+      "path": "/v1/sessions",
+      "body": {
+        "driver_id": "DRIVER_ID",
+        "requested_type": "AC",
+        "latitude": 12.9716,
+        "longitude": 77.5946,
+        "radius_km": 5,
+        "promo_code": "DOES_NOT_EXIST"
+      },
+      "curl": "curl -sS -i -X POST http://localhost:8080/v1/sessions -H 'Content-Type: application/json' -d '{\"driver_id\":\"DRIVER_ID\",\"requested_type\":\"AC\",\"latitude\":12.9716,\"longitude\":77.5946,\"radius_km\":5,\"promo_code\":\"DOES_NOT_EXIST\"}'"
+    }
+  ]
+}
