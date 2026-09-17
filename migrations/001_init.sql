@@ -1,16 +1,18 @@
 CREATE TABLE IF NOT EXISTS drivers (
     id UUID PRIMARY KEY,
     name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (
     id UUID PRIMARY KEY,
     driver_id UUID NOT NULL UNIQUE REFERENCES drivers(id) ON DELETE CASCADE,
-    registration_number TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
+    registration_number TEXT NOT NULL,
     supported_connector_types TEXT[] NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (email, registration_number)
 );
 
 CREATE TABLE IF NOT EXISTS stations (
