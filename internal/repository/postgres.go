@@ -51,8 +51,8 @@ func (p *Postgres) CreateDriver(ctx context.Context, driver domain.Driver) (doma
 			types[i] = string(connectorType)
 		}
 		_, err = tx.Exec(ctx, `INSERT INTO vehicles
-			(id, driver_id, registration_number, supported_connector_types)
-			VALUES ($1,$2,$3,$4)`, driver.Vehicle.ID, driver.ID,
+			(id, driver_id, email, registration_number, supported_connector_types)
+			VALUES ($1,$2,$3,$4,$5)`, driver.Vehicle.ID, driver.ID, driver.Email,
 			driver.Vehicle.RegistrationNumber, types)
 	}
 	if err != nil {
